@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onClick(View view) {
                 plusMinusLayout.reset();
                 dateTimeView.setText(DTF.print(now));
-                clockDrawable.start(now);
             }
         });
 

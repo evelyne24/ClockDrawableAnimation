@@ -3,26 +3,24 @@ package roo.clockanimation;
 import android.content.Context;
 import android.os.Build.VERSION_CODES;
 import android.support.annotation.RequiresApi;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import roo.clockanimation.PlusMinusButton.OnPlusMinusClickListener;
 
+import static android.view.LayoutInflater.from;
 import static java.lang.Integer.parseInt;
 
 /**
  * Created by evelina on 15/07/2016.
  */
 
-public class PlusMinusLayout extends LinearLayout implements OnPlusMinusClickListener, TextWatcher, OnFocusChangeListener {
+public class PlusMinusLayout extends LinearLayout implements OnPlusMinusClickListener {
 
     public interface OnChangeListener {
         void onChange(int days, int hours, int minutes);
@@ -57,7 +55,11 @@ public class PlusMinusLayout extends LinearLayout implements OnPlusMinusClickLis
     private void init(Context context, AttributeSet attributeSet) {
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER);
-        LayoutInflater.from(context).inflate(R.layout.plus_minus_date_time_layout, this, true);
+        from(context).inflate(R.layout.plus_minus_date_time_layout, this, true);
+        setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        requestFocus();
 
         dayText = (EditText) findViewById(R.id.day);
         hourText = (EditText) findViewById(R.id.hour);
@@ -113,66 +115,86 @@ public class PlusMinusLayout extends LinearLayout implements OnPlusMinusClickLis
     }
 
     public void reset() {
-
+        reset(dayText);
+        reset(hourText);
+        reset(minuteText);
+        notifyChangeListener();
     }
 
-    @Override public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    private void init(EditText editText) {
+        setText(editText, "0");
+        editText.setOnFocusChangeListener(new CustomFocusListener(editText));
     }
 
-    @Override public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    private void reset(EditText editText) {
+        editText.setOnFocusChangeListener(null);
+        init(editText);
+    }
+
+    private void notifyChangeListener() {
         if (listener != null) {
             listener.onChange(getDays(), getHours(), getMinutes());
         }
     }
 
-    @Override public void afterTextChanged(Editable editable) {
-    }
-
-    @Override public void onFocusChange(View view, boolean hasFocus) {
-        EditText editText = (EditText) view;
-        if (hasFocus() && isZero(editText)) {
-            editText.setText("");
-        } else if (!hasFocus && isEmpty(editText)) {
-            editText.setText("0");
-            editText.setSelection(getText(editText).length());
-        }
-    }
-
-    private void init(EditText editText) {
-        editText.setText("0");
-        editText.setSelection(getText(editText).length());
-        editText.addTextChangedListener(this);
-        editText.setOnFocusChangeListener(this);
-    }
-
     private void increase(EditText editText) {
-        editText.setText(change(editText, 1));
-        editText.setSelection(getText(editText).length());
+        setText(editText, change(editText, 1));
+        notifyChangeListener();
     }
 
     private void decrease(EditText editText) {
-        editText.setText(change(editText, -1));
-        editText.setSelection(getText(editText).length());
+        setText(editText, change(editText, -1));
+        notifyChangeListener();
     }
 
-    private String change(EditText editText, int value) {
+    private static String change(EditText editText, int value) {
         return String.valueOf(parseValue(editText) + value);
     }
 
-    private int parseValue(EditText editText) {
+    private static int parseValue(EditText editText) {
         return isEmpty(editText) ? 0 : parseInt(getText(editText));
     }
 
-    private String getText(EditText editText) {
+    private static String getText(EditText editText) {
         return editText.getText().toString();
     }
 
-    private boolean isEmpty(EditText editText) {
+    private static boolean isEmpty(EditText editText) {
         return TextUtils.isEmpty(getText(editText));
     }
 
-    private boolean isZero(EditText editText) {
+    private static boolean isZero(EditText editText) {
         return "0".equals(getText(editText));
+    }
+
+    private static void setText(EditText editText, String text) {
+        editText.setText(text);
+        editText.setSelection(getText(editText).length());
+    }
+
+
+    private class CustomFocusListener implements OnFocusChangeListener {
+        private final EditText editText;
+
+        public CustomFocusListener(EditText editText) {
+            this.editText = editText;
+        }
+
+        @Override public void onFocusChange(View view, boolean hasFocus) {
+            if (editText != view) {
+                return;
+            }
+
+            if (hasFocus && isZero(editText)) {
+                setText(editText, "");
+
+            } else if (!hasFocus) {
+                if (isEmpty(editText)) {
+                    setText(editText, "0");
+                }
+                notifyChangeListener();
+            }
+        }
     }
 
 }

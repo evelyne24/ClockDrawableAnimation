@@ -1,5 +1,7 @@
 package roo.clockanimation;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.res.Resources;
@@ -13,27 +15,23 @@ import android.graphics.Rect;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorRes;
-import android.view.animation.LinearInterpolator;
+import android.view.animation.AccelerateDecelerateInterpolator;
 
-import org.joda.time.Hours;
 import org.joda.time.LocalDateTime;
-import org.joda.time.Minutes;
 
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.graphics.Paint.Cap.ROUND;
 import static android.graphics.Paint.Style.FILL;
 import static android.graphics.Paint.Style.STROKE;
-import static android.util.Log.i;
+import static android.util.Log.d;
+import static org.joda.time.Minutes.minutesBetween;
 
 /**
  * Created by evelina on 15/07/2016.
  */
 
-public class ClockDrawable extends Drawable implements Animatable, AnimatorUpdateListener {
+public class ClockDrawable extends Drawable implements Animatable {
 
-    private final static float FULL_ROTATION_DEGREES = 360f;
-    private final static float HOUR_ROTATION_DEGREES = 30f; // 30 = 360 / 12
-    private final static float MINUTE_ROTATION_DEGREES = 0.5f; // 0.5 = 30 / 60
     private final static int ANIMATION_DURATION = 500;
 
     private static final @ColorRes int FACE_COLOR = android.R.color.white;
@@ -41,7 +39,8 @@ public class ClockDrawable extends Drawable implements Animatable, AnimatorUpdat
 
     private final Paint facePaint;
     private final Paint rimPaint;
-    private final ValueAnimator handAnimator;
+    private final ValueAnimator minAnimator;
+    private final ValueAnimator hourAnimator;
 
     private float rimRadius;
     private float faceRadius;
@@ -50,13 +49,17 @@ public class ClockDrawable extends Drawable implements Animatable, AnimatorUpdat
     private final Path hourHandPath;
     private final Path minuteHandPath;
 
-    private float hourHandStartRotation;
-    private float hourHandCurrRotation;
-    private float hourHandDeltaRotation;
+    private float remainingHourRotation = 0f;
+    private float remainingMinRotation = 0f;
 
-    private float minuteHandStartRotation;
-    private float minuteHandCurrRotation;
-    private float minHandDeltaRotation;
+    private float targetHourRotation = 0f;
+    private float targetMinRotation = 0f;
+
+    private float currentHourRotation = 0f;
+    private float currentMinRotation;
+
+    private boolean hourAnimInterrupted;
+    private boolean minAnimInterrupted;
 
     private LocalDateTime previousTime;
 
@@ -74,10 +77,48 @@ public class ClockDrawable extends Drawable implements Animatable, AnimatorUpdat
         hourHandPath = new Path();
         minuteHandPath = new Path();
 
-        handAnimator = ValueAnimator.ofFloat(0, FULL_ROTATION_DEGREES);
-        handAnimator.setInterpolator(new LinearInterpolator());
-        handAnimator.setDuration(ANIMATION_DURATION);
-        handAnimator.addUpdateListener(this);
+        hourAnimator = ValueAnimator.ofFloat(0, 0);
+        hourAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        hourAnimator.setDuration(ANIMATION_DURATION);
+        hourAnimator.addUpdateListener(new AnimatorUpdateListener() {
+            @Override public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                float fraction = (float) valueAnimator.getAnimatedValue();
+                //d("ANIM", "Hfraction = " + fraction + ", remaining hour rotation = " + remainingHourRotation);
+                remainingHourRotation = targetHourRotation - fraction;
+                currentHourRotation = fraction;
+                invalidateSelf();
+            }
+        });
+        hourAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(Animator animation) {
+                if (!hourAnimInterrupted) {
+                    remainingHourRotation = 0f;
+                }
+                //i("ANIM", "END! remaining hour rotation = " + remainingHourRotation);
+            }
+        });
+
+
+        minAnimator = ValueAnimator.ofFloat(0, 0);
+        minAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        minAnimator.setDuration(ANIMATION_DURATION);
+        minAnimator.addUpdateListener(new AnimatorUpdateListener() {
+            @Override public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                float fraction = (float) valueAnimator.getAnimatedValue();
+                //d("ANIM", "Mfraction = " + fraction + ", remaining minute rotation = " + remainingMinRotation);
+                remainingMinRotation = targetMinRotation - fraction;
+                currentMinRotation = fraction;
+                invalidateSelf();
+            }
+        });
+        minAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(Animator animation) {
+                if (!minAnimInterrupted) {
+                    remainingMinRotation = 0f;
+                }
+                //i("ANIM", "END! remaining minute rotation = " + remainingMinRotation);
+            }
+        });
 
         previousTime = LocalDateTime.now().withTime(0, 0, 0, 0);
     }
@@ -115,25 +156,17 @@ public class ClockDrawable extends Drawable implements Animatable, AnimatorUpdat
         canvas.drawCircle(bounds.centerX(), bounds.centerY(), screwRadius, rimPaint);
 
         int saveCount = canvas.save();
-        canvas.rotate(hourHandCurrRotation, bounds.centerX(), bounds.centerY());
+        canvas.rotate(currentHourRotation, bounds.centerX(), bounds.centerY());
         // draw hour hand
         canvas.drawPath(hourHandPath, rimPaint);
         canvas.restoreToCount(saveCount);
 
         saveCount = canvas.save();
-        canvas.rotate(minuteHandCurrRotation, bounds.centerX(), bounds.centerY());
+        canvas.rotate(currentMinRotation, bounds.centerX(), bounds.centerY());
         // draw minute hand
         canvas.drawPath(minuteHandPath, rimPaint);
         canvas.restoreToCount(saveCount);
     }
-
-//    private PointF computePointAlongArc(PointF center, PointF start, float alpha) {
-//        double cosA = cos(alpha);
-//        double sinA = sin(alpha);
-//        double rx = center.x + (start.x - center.x) * cosA + (center.y - start.y) * sinA;
-//        double ry = center.y + (start.y - center.y) * cosA + (start.x - center.x) * sinA;
-//        return new PointF((float) rx, (float) ry);
-//    }
 
     @Override public void setAlpha(int alpha) {
         rimPaint.setAlpha(alpha);
@@ -151,39 +184,49 @@ public class ClockDrawable extends Drawable implements Animatable, AnimatorUpdat
     }
 
     @Override public void start() {
-        handAnimator.start();
+        hourAnimInterrupted = false;
+        minAnimInterrupted = false;
+        hourAnimator.start();
+        minAnimator.start();
     }
 
-    public void start(LocalDateTime currentTime) {
-        int hoursBetween = Hours.hoursBetween(previousTime, currentTime).getHours();
-        int minutesBetween = Minutes.minutesBetween(previousTime, currentTime).getMinutes();
+    public void start(LocalDateTime newTime) {
+        int minDiff = minutesBetween(previousTime, newTime).getMinutes();
+        // 60min ... 360grade
+        // minDif .. minDelta
+        float minDeltaRotation = ((float) minDiff * 360f) / 60f;
+        // 720min ... 360grade = 12h ... 360grade
+        // minDif ... hourDelta
+        float hourDeltaRotation = ((float) minDiff * 360f) / 720f;
 
-        minuteHandStartRotation = minuteHandCurrRotation;
-        minHandDeltaRotation = minutesBetween * 12 * MINUTE_ROTATION_DEGREES;
+        remainingMinRotation += minDeltaRotation;
+        remainingHourRotation += hourDeltaRotation;
 
-        hourHandStartRotation = hourHandCurrRotation;
-        hourHandDeltaRotation = hoursBetween * HOUR_ROTATION_DEGREES;
-        i("ANIM", "rotate MINUTES by " + minHandDeltaRotation + ", HOUR by " + hourHandDeltaRotation);
+        d("ANIM", "current hour rotation = " + currentHourRotation + ", current min rotation = " + currentMinRotation);
 
-        handAnimator.setFloatValues(0, minHandDeltaRotation);
-        handAnimator.start();
+        if (isRunning()) {
+            stop();
+        }
 
-        previousTime = currentTime;
+        targetHourRotation = currentHourRotation + remainingHourRotation;
+        hourAnimator.setFloatValues(currentHourRotation, targetHourRotation);
+
+        targetMinRotation = currentMinRotation + remainingMinRotation;
+        minAnimator.setFloatValues(currentMinRotation, targetMinRotation);
+
+        start();
+
+        previousTime = newTime;
     }
 
     @Override public void stop() {
-        handAnimator.cancel();
-        handAnimator.cancel();
+        hourAnimInterrupted = true;
+        minAnimInterrupted = true;
+        hourAnimator.cancel();
+        minAnimator.cancel();
     }
 
     @Override public boolean isRunning() {
-        return handAnimator.isRunning() || handAnimator.isRunning();
-    }
-
-    @Override public void onAnimationUpdate(ValueAnimator valueAnimator) {
-        float fraction = valueAnimator.getAnimatedFraction();
-        hourHandCurrRotation = (hourHandStartRotation + fraction * hourHandDeltaRotation) % FULL_ROTATION_DEGREES;
-        minuteHandCurrRotation = (minuteHandStartRotation + fraction * minHandDeltaRotation) % FULL_ROTATION_DEGREES;
-        invalidateSelf();
+        return hourAnimator.isRunning() || minAnimator.isRunning();
     }
 }

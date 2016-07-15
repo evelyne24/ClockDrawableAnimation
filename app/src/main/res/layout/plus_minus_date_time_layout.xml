@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-    >
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <EditText
         android:id="@+id/day"
@@ -8,6 +7,7 @@
         android:layout_height="wrap_content"
         android:digits="1234567890"
         android:gravity="center"
+        android:imeOptions="actionNext"
         android:inputType="number"
         android:maxEms="2"
         android:minWidth="40dp"/>
@@ -29,6 +29,7 @@
         android:layout_height="wrap_content"
         android:digits="1234567890"
         android:gravity="center"
+        android:imeOptions="actionNext"
         android:inputType="number"
         android:maxEms="2"
         android:minWidth="40dp"/>
@@ -50,6 +51,7 @@
         android:layout_height="wrap_content"
         android:digits="1234567890"
         android:gravity="center"
+        android:imeOptions="actionNext"
         android:inputType="number"
         android:maxEms="2"
         android:minWidth="40dp"/>

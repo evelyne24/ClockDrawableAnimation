@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/content_main"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="150dp"
+    tools:context="roo.clockanimation.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_centerHorizontal="true"
+        tools:background="#ff0000"/>
+
+    <ImageButton
+        android:id="@+id/reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/image"
+        android:background="?selectableItemBackground"
+        android:padding="10dp"
+        app:srcCompat="@drawable/ic_reload"/>
+
+    <TextView
+        android:id="@+id/dateTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/image"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        tools:text="10 Jul 14:20 -> 10 Jul 26:45"/>
+
+    <roo.clockanimation.PlusMinusLayout
+        android:id="@+id/test"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dateTime"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"/>
+
+</RelativeLayout>

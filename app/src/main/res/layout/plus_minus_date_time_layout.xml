@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
+    <EditText
+        android:id="@+id/day"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:digits="1234567890"
+        android:gravity="center"
+        android:inputType="number"
+        android:maxEms="2"
+        android:minWidth="40dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:text="d"/>
+
+    <roo.clockanimation.PlusMinusButton
+        android:id="@+id/dayPlusMinus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/hour"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:digits="1234567890"
+        android:gravity="center"
+        android:inputType="number"
+        android:maxEms="2"
+        android:minWidth="40dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:text="h"/>
+
+    <roo.clockanimation.PlusMinusButton
+        android:id="@+id/hourPlusMinus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/minute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:digits="1234567890"
+        android:gravity="center"
+        android:inputType="number"
+        android:maxEms="2"
+        android:minWidth="40dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:text="m"/>
+
+    <roo.clockanimation.PlusMinusButton
+        android:id="@+id/minPlusMinus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+</merge>

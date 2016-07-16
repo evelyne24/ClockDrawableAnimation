@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         final ClockDrawable clockDrawable = new ClockDrawable(getResources());
+        clockDrawable.setAnimateDays(false);
         ImageView imageView = (ImageView) findViewById(R.id.image);
         imageView.setImageDrawable(clockDrawable);
 

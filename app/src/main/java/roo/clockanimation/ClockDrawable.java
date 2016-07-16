@@ -63,6 +63,8 @@ public class ClockDrawable extends Drawable implements Animatable {
 
     private LocalDateTime previousTime;
 
+    private boolean animateDays = true;
+
     public ClockDrawable(Resources resources) {
         facePaint = new Paint(ANTI_ALIAS_FLAG);
         facePaint.setColor(resources.getColor(FACE_COLOR));
@@ -190,8 +192,12 @@ public class ClockDrawable extends Drawable implements Animatable {
         minAnimator.start();
     }
 
+    public void setAnimateDays(boolean animateDays) {
+        this.animateDays = animateDays;
+    }
+
     public void start(LocalDateTime newTime) {
-        int minDiff = minutesBetween(previousTime, newTime).getMinutes();
+        int minDiff = getMinsBetween(previousTime, newTime);
         // 60min ... 360grade
         // minDif .. minDelta
         float minDeltaRotation = ((float) minDiff * 360f) / 60f;
@@ -228,5 +234,12 @@ public class ClockDrawable extends Drawable implements Animatable {
 
     @Override public boolean isRunning() {
         return hourAnimator.isRunning() || minAnimator.isRunning();
+    }
+
+    private int getMinsBetween(LocalDateTime t1, LocalDateTime t2) {
+        if(animateDays) {
+            return minutesBetween(t1, t2).getMinutes();
+        }
+        return minutesBetween(t1, t2.withDate(t1.getYear(), t1.getMonthOfYear(), t1.getDayOfMonth())).getMinutes();
     }
 }
